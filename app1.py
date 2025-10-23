@@ -77,12 +77,12 @@ def main():
     st.title("Energy Bench Leaderboard")
 
 
-    tab_Forecasting, tab_anomaly, tab_classification, tab_imputation, tab_about = st.tabs([
+    tab_Forecasting, tab_anomaly, tab_classification, tab_imputation = st.tabs([
         "🏆 Forecasting", 
         "🔍 Anomaly Detection", 
         "🏷️ Classification", 
-        "🩹 Imputation",
-        "ℹ️ About"
+        "🩹 Imputation"
+        #"ℹ️ About"
     ])
 
     
@@ -342,15 +342,16 @@ def main():
 
 
 
-    with tab_about:
-        with st.container(border=True):
-            st.markdown("<p style='font-weight:600;'></p>", unsafe_allow_html=True)
-            st.write("""⚪ Baseline: A simple model used as a benchmark to evaluate the performance of more complex models\n
-🔷 ML/DL: These are task-specific models that are trained from scratch on the given dataset.\n
-🔴 Zero-shot: It is a pretrained models that can generalize to unseen tasks or datasets without additional training, leveraging pretrained knowledge to make predictions directly.\n
-🟣 Fine-tuned: Pretrained models adapted to a specific task through additional training on the target dataset.\n
-🟢 Pretrained: We curated a large-scale energy consumption dataset consisting of 1.26 billion hourly observations collected from 76,217 real-world buildings, encompassing both commercial and residential types across diverse countries and temporal spans.""")
+#     with tab_about:
+#         with st.container(border=True):
+#             st.markdown("<p style='font-weight:600;'></p>", unsafe_allow_html=True)
+#             st.write("""⚪ Baseline: A simple model used as a benchmark to evaluate the performance of more complex models\n
+# 🔷 ML/DL: These are task-specific models that are trained from scratch on the given dataset.\n
+# 🔴 Zero-shot: It is a pretrained models that can generalize to unseen tasks or datasets without additional training, leveraging pretrained knowledge to make predictions directly.\n
+# 🟣 Fine-tuned: Pretrained models adapted to a specific task through additional training on the target dataset.\n
+# 🟢 Pretrained: We curated a large-scale energy consumption dataset consisting of 1.26 billion hourly observations collected from 76,217 real-world buildings, encompassing both commercial and residential types across diverse countries and temporal spans.""")
 
 
 if __name__ == "__main__":
     main()
+

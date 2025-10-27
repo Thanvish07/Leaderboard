@@ -2,8 +2,8 @@ name: Auto Commit to README
 
 on:
   schedule:
-    - cron: "0 */2 * * *"   # Runs every 2 hours (UTC time)
-  workflow_dispatch:         # Allows manual trigger from Actions tab
+    - cron: "0 */2 * * *"   # Runs every 2 hours (UTC)
+  workflow_dispatch:
 
 jobs:
   update-readme:
@@ -15,17 +15,12 @@ jobs:
 
       - name: Update README timestamp
         run: |
-          # Set timezone (optional - change to your region)
           export TZ='Asia/Kolkata'
-
-          # Write or append update info
           echo "Last updated on: $(date)" > README.md
 
-          # Git configuration
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "Thanish Vishaal"
+          git config user.email "Thanvish07@users.noreply.github.com"  # or verified email
 
-          # Commit and push
           git add README.md
           git commit -m "Auto update: $(date)" || echo "No changes to commit"
           git push

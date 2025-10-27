@@ -14,21 +14,17 @@ def style_dataframe(df, metric_col, ascending=False):
     Applies minimal styling and ensures number formatting.
     All coloring and highlighting removed as requested.
     """
-    
     # Custom formatters for float values
     format_mapping = {
         col: '{:.4f}' for col in df.select_dtypes(include=np.number).columns
     }
-
     styler = df.style.format(format_mapping)
     
     # Set table properties for a clean look
     styler = styler.set_properties(**{'text-align': 'center'})
-    
     return styler
 
 # --- 2. Data Cleaning and Preprocessing Functions ---
-
 def clean_standard_df(data_source, task_name):
     """
     Cleans Anomaly and Classification data, handles missing values, and ranks by F1-score.
@@ -36,7 +32,6 @@ def clean_standard_df(data_source, task_name):
     """
     if isinstance(data_source, str):
         data_source = io.StringIO(data_source)
-        
     df = pd.read_csv(data_source)
     
     # Check if 'Type' column exists in the data
@@ -56,12 +51,11 @@ def clean_standard_df(data_source, task_name):
     # Aggregate duplicate models by taking the mean of their metrics.
     # Grouping by Model and Type ensures different types of the same model are treated separately.
     df = df.groupby(group_cols)[['Precision', 'Recall', 'F1-score']].mean().reset_index()
-
+    
     # Calculate Rank: Higher F1-score is better (ascending=False)
     df['Rank'] = df['F1-score'].rank(method='min', ascending=False).astype('Int64')
     df['Task'] = task_name
     return df.sort_values(by='Rank')
-
 
 def main():
     """Sets up the Streamlit application structure and loads data."""
@@ -70,10 +64,8 @@ def main():
         layout="wide",
         initial_sidebar_state="collapsed",
     )
-
     st.title("Energy Bench Leaderboard")
-
-
+    
     tab_Forecasting, tab_anomaly, tab_classification, tab_imputation = st.tabs([
         "🏆 Forecasting", 
         "🔍 Anomaly Detection", 
@@ -81,7 +73,7 @@ def main():
         "🩹 Imputation"
         # "ℹ️ About"
     ])
-
+    
     # --- Forecasting Tab --- 
     with tab_Forecasting:
         st.write("We curated a large-scale energy consumption dataset consisting of 1.26 billion hourly observations collected from 76,217 real-world buildings, encompassing both commercial and residential types across diverse countries and temporal spans.")
@@ -97,20 +89,19 @@ def main():
                 "Pre-trained": "🟢",
                 "Unknown": "❔"
             }
-
+            
             # Fill NaN values in 'Type' to avoid float issues
             RAW_FORECASTING_DATA["Type"] = RAW_FORECASTING_DATA["Type"].fillna("Unknown")
-
+            
             # Add an icon column (first column)
             RAW_FORECASTING_DATA.insert(
                 0, "Icon", RAW_FORECASTING_DATA["Type"].map(icon_map).fillna("❔")
             )
-
             type_container = st.container()
+            
             # Determine the number of unique types to set column count dynamically
             unique_types_forecast = RAW_FORECASTING_DATA.Type.unique()
             cols_types = type_container.columns(len(unique_types_forecast), gap="small")
-
             selected_types_check = []
             
             # Use unique combination of type + index for key to avoid duplicates
@@ -122,10 +113,8 @@ def main():
                 
                 # Unique key using model_type + iteration index
                 checkbox_key = f"type_filter_{model_type_str}_{i}"
-
                 if cols_types[col_index].checkbox(checkbox_label, value=True, key=checkbox_key):
                     selected_types_check.append(model_type_str)
-
 
         # Filter data based on selected checkboxes
         filtered = RAW_FORECASTING_DATA[RAW_FORECASTING_DATA.Type.isin(selected_types_check)]
@@ -139,16 +128,16 @@ def main():
             'In-Distribution(ID)_Residential'
         ]
         df_display = filtered[display_cols]
+        
         # Sort by OOD_Commercial (lower is better, hence ascending=True for error metrics)
         df_display = df_display.sort_values(by='Out-of-distribution(OOD)_Commercial', ascending=True).reset_index(drop=True)
-
-
+        
         st.dataframe(
             style_dataframe(df_display, 'Out-of-distribution(OOD)_Commercial', ascending=True),
             use_container_width=False,
             hide_index=True
         )
-
+        
         with st.container(border=True):
             st.markdown("<p style='font-weight:600;'></p>", unsafe_allow_html=True)
             st.write("""⚪ Baseline: A simple model used as a benchmark to evaluate the performance of more complex models\n
@@ -175,14 +164,8 @@ def main():
 
             # Add an icon column (first column)
             RAW_ANOMALY_DATA.insert(0, "Icon", RAW_ANOMALY_DATA["Type"].map(icon_map))
-
-
             type_container = st.container()
             cols_types = type_container.columns(5, gap="small")
-
-
-
-
             selected_types_check = []
             i = 0
             for icon, model_type in zip(RAW_ANOMALY_DATA.Icon.unique(), RAW_ANOMALY_DATA.Type.unique()):
@@ -191,20 +174,13 @@ def main():
                 if cols_types[i].checkbox( str(icon) + model_type, value=True, key=f"type_filter_{model_type}"):
                     selected_types_check.append(model_type)
                 i += 1
-
-
             filtered = RAW_ANOMALY_DATA[RAW_ANOMALY_DATA.Type.isin(selected_types_check)]
 
-
-        
         # Display Anomaly Detection Results
         # Ensure 'Type' is included in the display columns
         display_cols = ['Icon', 'Model', 'F1-score', 'Precision', 'Recall']
-            
         df_display = filtered[display_cols]
         df_display = df_display.sort_values(by='F1-score', ascending=False).reset_index(drop=True)
-
-   
 
         st.dataframe(
             style_dataframe(df_display, 'F1-score', ascending=False),
@@ -247,7 +223,6 @@ def main():
             type_container = st.container()
             unique_types_class = RAW_CLASSIFICATION_DATA.Type.unique()
             cols_types = type_container.columns(len(unique_types_class), gap="small")
-
             selected_types_check = []
             
             # Use unique combination of type + index for key to avoid duplicates
@@ -256,24 +231,18 @@ def main():
                 model_type_str = str(model_type)
                 checkbox_label = f"{icon} {model_type_str}"
                 col_index = i % len(cols_types)
-
                 # Unique key using model_type + iteration index
                 checkbox_key = f"class_type_filter_{model_type_str}_{i}"
-
                 if cols_types[col_index].checkbox(checkbox_label, value=True, key=checkbox_key):
                     selected_types_check.append(model_type_str)
-
 
         # Filter data based on selected checkboxes
         filtered = RAW_CLASSIFICATION_DATA[RAW_CLASSIFICATION_DATA.Type.isin(selected_types_check)]
 
         # Display Classification Results
         display_cols = ['Icon','Model','F1-score','Precision','Recall']
-        df_display = filtered[display_cols].reset_index(drop=True)
-        
-        # --- START OF CHANGE: Sort by F1-score descending (higher is better) ---
+        df_display = filtered[display_cols].reset_index(drop=True)   
         df_display = df_display.sort_values(by='F1-score', ascending=False).reset_index(drop=True)
-        # --- END OF CHANGE ---
 
         st.dataframe(
             style_dataframe(df_display, 'F1-score', ascending=False),
@@ -314,7 +283,6 @@ def main():
             type_container = st.container()
             unique_types_imput = RAW_IMPUTATION_DATA.Type.unique()
             cols_types = type_container.columns(len(unique_types_imput), gap="small")
-
             selected_types_check = []
             
             # Use unique combination of type + index for key to avoid duplicates
@@ -330,17 +298,13 @@ def main():
                 if cols_types[col_index].checkbox(checkbox_label, value=True, key=checkbox_key):
                     selected_types_check.append(model_type_str)
 
-
         # Filter data based on selected checkboxes
         filtered = RAW_IMPUTATION_DATA[RAW_IMPUTATION_DATA.Type.isin(selected_types_check)]
 
         # Display Imputation Results
         display_cols = ['Icon','Model','Mask','MAE','MSE']
         df_display = filtered[display_cols].reset_index(drop=True)
-        
-        # --- START OF CHANGE: Sort by MSE ascending (lower is better) ---
         df_display = df_display.sort_values(by='MSE', ascending=True).reset_index(drop=True)
-        # --- END OF CHANGE ---
 
         st.dataframe(
             style_dataframe(df_display, 'MSE', ascending=True),

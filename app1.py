@@ -94,7 +94,8 @@ def main():
                 "ML/DL": "🔷",
                 "Zero-shot": "🔴",
                 "Fine-tuned": "🟣",
-                "Pre-trained": "🟢"
+                "Pre-trained": "🟢",
+                "Unknown": "❔"
             }
 
             # Fill NaN values in 'Type' to avoid float issues
@@ -106,13 +107,15 @@ def main():
             )
 
             type_container = st.container()
-            cols_types = type_container.columns(5, gap="small")
+            # Determine the number of unique types to set column count dynamically
+            unique_types_forecast = RAW_FORECASTING_DATA.Type.unique()
+            cols_types = type_container.columns(len(unique_types_forecast), gap="small")
 
             selected_types_check = []
-            i = 0
-
+            
             # Use unique combination of type + index for key to avoid duplicates
-            for icon, model_type in zip(RAW_FORECASTING_DATA.Icon.unique(), RAW_FORECASTING_DATA.Type.unique()):
+            for i, model_type in enumerate(unique_types_forecast):
+                icon = icon_map.get(model_type, "❔")
                 model_type_str = str(model_type)
                 checkbox_label = f"{icon} {model_type_str}"
                 col_index = i % len(cols_types)
@@ -122,7 +125,7 @@ def main():
 
                 if cols_types[col_index].checkbox(checkbox_label, value=True, key=checkbox_key):
                     selected_types_check.append(model_type_str)
-                i += 1
+
 
         # Filter data based on selected checkboxes
         filtered = RAW_FORECASTING_DATA[RAW_FORECASTING_DATA.Type.isin(selected_types_check)]
@@ -136,9 +139,12 @@ def main():
             'In-Distribution(ID)_Residential'
         ]
         df_display = filtered[display_cols]
+        # Sort by OOD_Commercial (lower is better, hence ascending=True for error metrics)
+        df_display = df_display.sort_values(by='Out-of-distribution(OOD)_Commercial', ascending=True).reset_index(drop=True)
+
 
         st.dataframe(
-            style_dataframe(df_display, 'Out-of-distribution(OOD)_Commercial', ascending=False),
+            style_dataframe(df_display, 'Out-of-distribution(OOD)_Commercial', ascending=True),
             use_container_width=False,
             hide_index=True
         )

@@ -3,10 +3,7 @@ import pandas as pd
 import io
 import numpy as np
 
-# --- 1. Raw Data Storage (Mimicking CSV Files) ---
-# These strings serve as the default data source if no files are uploaded.
-
-# UPDATED: Anomaly Data with 'Type'
+# --- 1. Raw Data Storage ---
 RAW_ANOMALY_DATA = pd.read_csv("Anomaly_Detection_Results.csv")
 RAW_FORECASTING_DATA = pd.read_csv("Forecasting.csv")
 RAW_CLASSIFICATION_DATA = pd.read_csv("Classification_Results.csv")
@@ -82,10 +79,10 @@ def main():
         "🔍 Anomaly Detection", 
         "🏷️ Classification", 
         "🩹 Imputation"
-        #"ℹ️ About"
+        # "ℹ️ About"
     ])
 
-    
+    # --- Forecasting Tab --- 
     with tab_Forecasting:
         st.write("We curated a large-scale energy consumption dataset consisting of 1.26 billion hourly observations collected from 76,217 real-world buildings, encompassing both commercial and residential types across diverse countries and temporal spans.")
         with st.container(border=True):  # Streamlit container for the border/box
@@ -154,7 +151,7 @@ def main():
 🟣 Fine-tuned: Pretrained models adapted to a specific task through additional training on the target dataset.\n
 🟢 Pretrained: Models trained on large-scale datasets to capture general patterns, which can later be adapted for specific tasks.""")
 
-
+    # --- Anomaly Detection Tab --- 
     with tab_anomaly:
         st.write("We use the Large-scale Energy Anomaly Detection (LEAD) dataset which contains electricity meter readings from 200 buildings and anomaly labels. Since the meter readings include missing values, we applied a median imputation technique to handle them. All readings were then normalized using the Standard Scaler. Model performance was evaluated using the F1-score as the primary evaluation metric.")
                 # --- Model Type Checkboxes (Styled as Buttons in a Box) ---
@@ -218,7 +215,7 @@ def main():
 🟢 Pretrained: Models trained on large-scale datasets to capture general patterns, which can later be adapted for specific tasks.""")
 
 
-        # --- Classification Tab ---    
+    # --- Classification Tab ---      
     with tab_classification:
         st.write("The ComStock dataset provides 15-minute simulated energy data for U.S. commercial buildings. We selected 1,000 California buildings, using 60-minute appliance-level load data (cooling, fans, heat rejection, heating, refrigerator, washing machine) from 2018. Each appliance has binary labels. Data were split 70% for training and 30% for testing.")
         with st.container(border=True):  # Streamlit container for the border/box
@@ -228,7 +225,8 @@ def main():
             icon_map = {
                 "ML/DL": "🔷",
                 "Fine-tuned": "🟣",
-                "Pre-trained": "🟢"
+                "Pre-trained": "🟢",
+                "Unknown": "❔"
             }
 
             # Fill NaN values in 'Type' to avoid float issues
@@ -241,13 +239,14 @@ def main():
 
             # Container for checkboxes
             type_container = st.container()
-            cols_types = type_container.columns(3, gap="small")
+            unique_types_class = RAW_CLASSIFICATION_DATA.Type.unique()
+            cols_types = type_container.columns(len(unique_types_class), gap="small")
 
             selected_types_check = []
-            i = 0
-
+            
             # Use unique combination of type + index for key to avoid duplicates
-            for icon, model_type in zip(RAW_CLASSIFICATION_DATA.Icon.unique(), RAW_CLASSIFICATION_DATA.Type.unique()):
+            for i, model_type in enumerate(unique_types_class):
+                icon = icon_map.get(model_type, "❔")
                 model_type_str = str(model_type)
                 checkbox_label = f"{icon} {model_type_str}"
                 col_index = i % len(cols_types)
@@ -257,7 +256,7 @@ def main():
 
                 if cols_types[col_index].checkbox(checkbox_label, value=True, key=checkbox_key):
                     selected_types_check.append(model_type_str)
-                i += 1
+
 
         # Filter data based on selected checkboxes
         filtered = RAW_CLASSIFICATION_DATA[RAW_CLASSIFICATION_DATA.Type.isin(selected_types_check)]
@@ -265,6 +264,10 @@ def main():
         # Display Classification Results
         display_cols = ['Icon','Model','F1-score','Precision','Recall']
         df_display = filtered[display_cols].reset_index(drop=True)
+        
+        # --- START OF CHANGE: Sort by F1-score descending (higher is better) ---
+        df_display = df_display.sort_values(by='F1-score', ascending=False).reset_index(drop=True)
+        # --- END OF CHANGE ---
 
         st.dataframe(
             style_dataframe(df_display, 'F1-score', ascending=False),
@@ -278,7 +281,7 @@ def main():
 🟣 Fine-tuned: Pretrained models adapted to a specific task through additional training on the target dataset.\n
 🟢 Pretrained: Models trained on large-scale datasets to capture general patterns, which can later be adapted for specific tasks.""")
 
-
+    # --- Imputation Tab --- 
     with tab_imputation:
         st.write("We used meter data from 78 commercial buildings, which form a subset of the BDG2 dataset. Initially, all missing values were replaced with zeros. A Min–Max scaler was applied to each meter reading to normalize the values within the range [0, 1]. The dataset was divided into training (7 months), validation (2 months), and testing (3 months) sets. To evaluate the model’s robustness against incomplete data, masking was applied to simulate missing values at 5%, 10%, 15%, and 20% levels. Model performance was assessed using two key metrics: Mean Absolute Error (MAE) and Mean Squared Error (MSE).")
         with st.container(border=True):
@@ -290,6 +293,7 @@ def main():
                 "ML/DL": "🔷",
                 "Zero-shot": "🔴",
                 "Fine-tuned": "🟣",
+                "Unknown": "❔"
             }
 
             # Fill NaN values in 'Type' to avoid float issues
@@ -302,33 +306,38 @@ def main():
 
             # Container for checkboxes
             type_container = st.container()
-            cols_types = type_container.columns(4, gap="small")
+            unique_types_imput = RAW_IMPUTATION_DATA.Type.unique()
+            cols_types = type_container.columns(len(unique_types_imput), gap="small")
 
             selected_types_check = []
-            i = 0
-
+            
             # Use unique combination of type + index for key to avoid duplicates
-            for icon, model_type in zip(RAW_IMPUTATION_DATA.Icon.unique(), RAW_IMPUTATION_DATA.Type.unique()):
+            for i, model_type in enumerate(unique_types_imput):
+                icon = icon_map.get(model_type, "❔")
                 model_type_str = str(model_type)
                 checkbox_label = f"{icon} {model_type_str}"
                 col_index = i % len(cols_types)
 
                 # Unique key using model_type + iteration index
-                checkbox_key = f"class_type_filter_{model_type_str}_{i}"
+                checkbox_key = f"imput_type_filter_{model_type_str}_{i}"
 
                 if cols_types[col_index].checkbox(checkbox_label, value=True, key=checkbox_key):
                     selected_types_check.append(model_type_str)
-                i += 1
+
 
         # Filter data based on selected checkboxes
         filtered = RAW_IMPUTATION_DATA[RAW_IMPUTATION_DATA.Type.isin(selected_types_check)]
 
-        # Display Classification Results
+        # Display Imputation Results
         display_cols = ['Icon','Model','Mask','MAE','MSE']
         df_display = filtered[display_cols].reset_index(drop=True)
+        
+        # --- START OF CHANGE: Sort by MSE ascending (lower is better) ---
+        df_display = df_display.sort_values(by='MSE', ascending=True).reset_index(drop=True)
+        # --- END OF CHANGE ---
 
         st.dataframe(
-            style_dataframe(df_display, 'Mask', ascending=False),
+            style_dataframe(df_display, 'MSE', ascending=True),
             use_container_width=False,
             hide_index=True
         )
@@ -354,4 +363,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

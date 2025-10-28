@@ -9,6 +9,7 @@ RAW_FORECASTING_DATA = pd.read_csv("Forecasting.csv")
 RAW_CLASSIFICATION_DATA = pd.read_csv("Classification_Results.csv")
 RAW_IMPUTATION_DATA = pd.read_csv("Imputation_Results.csv")
 
+
 def style_dataframe(df, metric_col, ascending=False):
     """
     Applies minimal styling and ensures number formatting.
@@ -27,25 +28,29 @@ def style_dataframe(df, metric_col, ascending=False):
 # --- Function to create a generic column selection block ---
 def column_selector(available_cols, default_cols, key_suffix):
     """Creates a Streamlit container with checkboxes for column selection."""
+            
     with st.container(border=True):
-        st.markdown("<p style='font-weight:600;'>Select Columns to display:</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-weight:600;'>Select Columns</p>", unsafe_allow_html=True)
         
         # Determine the number of columns for the checkbox layout
         num_cols_for_display = min(len(available_cols), 6) # Cap at 6 columns for neatness
-        cols_display = st.columns(num_cols_for_display)
-        
-        selected_cols = []
+        # Use st.columns instead of columns() method on type_container
+        cols_display = st.columns(num_cols_for_display) 
+        cols_display = cols_display
+        available_cols = available_cols
+        selected_cols = ['Icon','Model']
         
         for i, col_name in enumerate(available_cols):
-            # The 'Icon' and 'Model' columns should generally be locked and default to True
+            
+            # The checkbox state should be derived from default_cols for initial rendering
             is_default = col_name in default_cols
+            
             col_index = i % num_cols_for_display
             
-            # Use unique key for each checkbox
+            # Create a unique key for each checkbox
             checkbox_key = f"col_filter_{col_name.replace('(', '').replace(')', '').replace('-', '_')}_{key_suffix}"
             
-            # Lock 'Icon' and 'Model' by making them disabled if they are mandatory
-            # However, for maximum user flexibility, we will just make them default 'True'
+            # Display the checkbox
             if cols_display[col_index].checkbox(
                 col_name, 
                 value=is_default, 
@@ -73,32 +78,21 @@ def main():
     ])
 
     # --- AVAILABLE COLUMN DEFINITIONS ---
-    FORECASTING_ORIGINAL_COLS = [
+    FORECASTING_AVAILABLE_COLS = [
         'Out-of-distribution(OOD)_Commercial',
         'Out-of-distribution(OOD)_Residential',
         'In-Distribution(ID)_Commercial',
         'In-Distribution(ID)_Residential'
     ]
-    # Use \n tag to force line breaks in the column names for better display
-    FORECASTING_DISPLAY_COLS = [
-        'Out-of-distribution(OOD)\nCommercial',
-        'Out-of-distribution(OOD)\nResidential',
-        'In-Distribution(ID)\nCommercial',
-        'In-Distribution(ID)\nResidential'
-    ]
+    FORECASTING_DEFAULT_COLS = FORECASTING_AVAILABLE_COLS # All columns displayed by default
     
-    FORECASTING_COLUMN_MAP = dict(zip(FORECASTING_ORIGINAL_COLS, FORECASTING_DISPLAY_COLS))
-
-    FORECASTING_AVAILABLE_COLS = ['Icon', 'Model'] + FORECASTING_DISPLAY_COLS
-    FORECASTING_DEFAULT_COLS = FORECASTING_AVAILABLE_COLS 
+    ANOMALY_AVAILABLE_COLS = ['F1-score', 'Precision', 'Recall']
+    ANOMALY_DEFAULT_COLS = ANOMALY_AVAILABLE_COLS  # Default to Precision and Recall only
     
-    ANOMALY_AVAILABLE_COLS = ['Icon', 'Model', 'F1-score', 'Precision', 'Recall']
-    ANOMALY_DEFAULT_COLS = ANOMALY_AVAILABLE_COLS
-    
-    CLASSIFICATION_AVAILABLE_COLS = ['Icon','Model','F1-score','Precision','Recall']
+    CLASSIFICATION_AVAILABLE_COLS = ['F1-score','Precision','Recall']
     CLASSIFICATION_DEFAULT_COLS = CLASSIFICATION_AVAILABLE_COLS
 
-    IMPUTATION_AVAILABLE_COLS = ['Icon','Model','Mask','MAE','MSE']
+    IMPUTATION_AVAILABLE_COLS = ['Mask','MAE','MSE']
     IMPUTATION_DEFAULT_COLS = IMPUTATION_AVAILABLE_COLS
     
     
@@ -110,7 +104,7 @@ def main():
         
         # --- Model Type Checkboxes ---
         with st.container(border=True):
-            st.markdown("<p style='font-weight:600;'>Model types:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-weight:600;'>Model types</p>", unsafe_allow_html=True)
             icon_map = {
                 "Baseline": "⚪", "ML/DL": "🔷", "Zero-shot": "🔴", 
                 "Fine-tuned": "🟣", "Pre-trained": "🟢", "Unknown": "❔"
@@ -131,6 +125,7 @@ def main():
                 if cols_types[col_index].checkbox(checkbox_label, value=True, key=checkbox_key):
                     selected_types_check.append(model_type_str)
 
+        # Filter data based on selected type checkboxes
         filtered_forecasting = RAW_FORECASTING_DATA[RAW_FORECASTING_DATA.Type.isin(selected_types_check)].copy()
         
         # --- Column Selection ---
@@ -140,22 +135,19 @@ def main():
             "forecast"
         )
         
-        # Rename the columns to their HTML-formatted display names
-        df_display_forecast_temp = filtered_forecasting.rename(columns=FORECASTING_COLUMN_MAP)
+        # Display Forecasting Results
+        # Use the list of selected columns
+        df_display_forecast = filtered_forecasting[selected_cols_forecast]
         
-        # Filter by the selected display columns
-        df_display_forecast = df_display_forecast_temp[selected_cols_forecast]
-        
-        sort_col_original = 'Out-of-distribution(OOD)_Commercial'
-        sort_col_display = FORECASTING_COLUMN_MAP.get(sort_col_original, sort_col_original)
-        
-        if sort_col_display in df_display_forecast.columns:
-            df_display_forecast = df_display_forecast.sort_values(by=sort_col_display, ascending=True).reset_index(drop=True)
+        # Sort logic: Lower OOD_Commercial is better (ascending=True for error metrics)
+        sort_col = 'Out-of-distribution(OOD)_Commercial'
+        if sort_col in df_display_forecast.columns:
+            df_display_forecast = df_display_forecast.sort_values(by=sort_col, ascending=True).reset_index(drop=True)
         
         st.dataframe(
-            style_dataframe(df_display_forecast, sort_col_display, ascending=True),
+            style_dataframe(df_display_forecast, sort_col, ascending=True),
             use_container_width=False,
-            hide_index=True,
+            hide_index=True
         )
         
         with st.container(border=True):
@@ -174,7 +166,7 @@ def main():
         
         # --- Model Type Checkboxes ---
         with st.container(border=True):
-            st.markdown("<p style='font-weight:600;'>Model types:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-weight:600;'>Model types</p>", unsafe_allow_html=True)
             icon_map = {
                 "Statistical": "🔶", "ML/DL": "🔷", "Zero-shot": "🔴", 
                 "Fine-tuned": "🟣", "Pre-trained": "🟢"
@@ -204,6 +196,7 @@ def main():
         # Display Anomaly Detection Results
         df_display_anomaly = filtered_anomaly[selected_cols_anomaly]
         
+        # Sort logic: Higher F1-score is better (ascending=False)
         sort_col = 'F1-score'
         if sort_col in df_display_anomaly.columns:
             df_display_anomaly = df_display_anomaly.sort_values(by=sort_col, ascending=False).reset_index(drop=True)
@@ -230,7 +223,7 @@ def main():
         
         # --- Model Type Checkboxes ---
         with st.container(border=True):
-            st.markdown("<p style='font-weight:600;'>Model types:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-weight:600;'>Model types</p>", unsafe_allow_html=True)
             icon_map = {
                 "ML/DL": "🔷", "Fine-tuned": "🟣", "Pre-trained": "🟢", "Unknown": "❔"
             }
@@ -250,6 +243,7 @@ def main():
                 if cols_types[col_index].checkbox(checkbox_label, value=True, key=checkbox_key):
                     selected_types_check.append(model_type_str)
 
+        # Filter data based on selected type checkboxes
         filtered_classification = RAW_CLASSIFICATION_DATA[RAW_CLASSIFICATION_DATA.Type.isin(selected_types_check)].copy()
 
         # --- Column Selection ---
@@ -262,6 +256,7 @@ def main():
         # Display Classification Results
         df_display_class = filtered_classification[selected_cols_class].reset_index(drop=True)
         
+        # Sort logic: Higher F1-score is better (ascending=False)
         sort_col = 'F1-score'
         if sort_col in df_display_class.columns:
             df_display_class = df_display_class.sort_values(by=sort_col, ascending=False).reset_index(drop=True)
@@ -286,10 +281,10 @@ def main():
         
         # --- Model Type Checkboxes ---
         with st.container(border=True):
-            st.markdown("<p style='font-weight:600;'>Model types:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-weight:600;'>Model types</p>", unsafe_allow_html=True)
             icon_map = {
                 "Baseline": "⚪", "ML/DL": "🔷", "Zero-shot": "🔴", 
-                "Fine-tuned": "🟣"
+                "Fine-tuned": "🟣", "Unknown": "❔"
             }
             RAW_IMPUTATION_DATA["Type"] = RAW_IMPUTATION_DATA["Type"].fillna("Unknown")
             RAW_IMPUTATION_DATA.insert(0, "Icon", RAW_IMPUTATION_DATA["Type"].map(icon_map).fillna("❔"))
@@ -307,6 +302,7 @@ def main():
                 if cols_types[col_index].checkbox(checkbox_label, value=True, key=checkbox_key):
                     selected_types_check.append(model_type_str)
 
+        # Filter data based on selected type checkboxes
         filtered_imputation = RAW_IMPUTATION_DATA[RAW_IMPUTATION_DATA.Type.isin(selected_types_check)].copy()
 
         # --- Column Selection ---
@@ -319,6 +315,7 @@ def main():
         # Display Imputation Results
         df_display_imput = filtered_imputation[selected_cols_imput].reset_index(drop=True)
         
+        # Sort logic: Lower MSE is better (ascending=True for error metrics)
         sort_col = 'MSE'
         if sort_col in df_display_imput.columns:
             df_display_imput = df_display_imput.sort_values(by=sort_col, ascending=True).reset_index(drop=True)
@@ -336,7 +333,6 @@ def main():
 🔴 Zero-shot: These are pretrained models that can generalize to unseen tasks or datasets without additional training, leveraging pretrained knowledge to make predictions directly.\n
 🟣 Fine-tuned: Pretrained models adapted to a specific task through additional training on the target dataset.""")
 
-
 #     with tab_about:
 #         with st.container(border=True):
 #             st.markdown("<p style='font-weight:600;'></p>", unsafe_allow_html=True)
@@ -345,7 +341,6 @@ def main():
 # 🔴 Zero-shot: It is a pretrained models that can generalize to unseen tasks or datasets without additional training, leveraging pretrained knowledge to make predictions directly.\n
 # 🟣 Fine-tuned: Pretrained models adapted to a specific task through additional training on the target dataset.\n
 # 🟢 Pretrained: We curated a large-scale energy consumption dataset consisting of 1.26 billion hourly observations collected from 76,217 real-world buildings, encompassing both commercial and residential types across diverse countries and temporal spans.""")
-
 
 if __name__ == "__main__":
     main()

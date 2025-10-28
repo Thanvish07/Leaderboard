@@ -3,7 +3,7 @@ import pandas as pd
 import io
 import numpy as np
 
-# --- 1. Raw Data Storage ---
+# --- Raw Data Storage ---
 RAW_ANOMALY_DATA = pd.read_csv("Anomaly_Detection_Results.csv")
 RAW_FORECASTING_DATA = pd.read_csv("Forecasting.csv")
 RAW_CLASSIFICATION_DATA = pd.read_csv("Classification_Results.csv")
@@ -24,40 +24,7 @@ def style_dataframe(df, metric_col, ascending=False):
     styler = styler.set_properties(**{'text-align': 'center'})
     return styler
 
-# --- 2. Data Cleaning and Preprocessing Functions ---
-def clean_standard_df(data_source, task_name):
-    """
-    Cleans Anomaly and Classification data, handles missing values, and ranks by F1-score.
-    Includes aggregation for duplicate models and handles the new 'Type' column.
-    """
-    if isinstance(data_source, str):
-        data_source = io.StringIO(data_source)
-    df = pd.read_csv(data_source)
-    
-    # Check if 'Type' column exists in the data
-    if 'Type' in df.columns:
-        # Normalize the 'Type' column (e.g., Fine-Tuned -> Fine-tuned)
-        df['Type'] = df['Type'].str.capitalize()
-        group_cols = ['Type', 'Model']
-    else:
-        group_cols = ['Model']
-        # Add a placeholder 'Type' column for consistency across all dataframes
-        df['Type'] = 'N/A' 
-        
-    # Replace '-' with NaN and convert relevant columns to numeric
-    for col in ['Precision', 'Recall', 'F1-score']:
-        df[col] = df[col].replace('-', np.nan).astype(float)
-        
-    # Aggregate duplicate models by taking the mean of their metrics.
-    # Grouping by Model and Type ensures different types of the same model are treated separately.
-    df = df.groupby(group_cols)[['Precision', 'Recall', 'F1-score']].mean().reset_index()
-    
-    # Calculate Rank: Higher F1-score is better (ascending=False)
-    df['Rank'] = df['F1-score'].rank(method='min', ascending=False).astype('Int64')
-    df['Task'] = task_name
-    return df.sort_values(by='Rank')
-
-# --- NEW: Function to create a generic column selection block ---
+# --- Function to create a generic column selection block ---
 def column_selector(available_cols, default_cols, key_suffix):
     """Creates a Streamlit container with checkboxes for column selection."""
     with st.container(border=True):
@@ -382,5 +349,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

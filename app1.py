@@ -30,7 +30,7 @@ def column_selector(available_cols, default_cols, key_suffix):
     """Creates a Streamlit container with checkboxes for column selection."""
             
     with st.container(border=True):
-        st.markdown("<p style='font-weight:600;'>Select Columns</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-weight:600;'>Select Columns to display:</p>", unsafe_allow_html=True)
         
         # Determine the number of columns for the checkbox layout
         num_cols_for_display = min(len(available_cols), 6) # Cap at 6 columns for neatness
@@ -104,7 +104,7 @@ def main():
         
         # --- Model Type Checkboxes ---
         with st.container(border=True):
-            st.markdown("<p style='font-weight:600;'>Model types</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-weight:600;'>Model types:</p>", unsafe_allow_html=True)
             icon_map = {
                 "Baseline": "⚪", "ML/DL": "🔷", "Zero-shot": "🔴", 
                 "Fine-tuned": "🟣", "Pre-trained": "🟢", "Unknown": "❔"
@@ -166,7 +166,7 @@ def main():
         
         # --- Model Type Checkboxes ---
         with st.container(border=True):
-            st.markdown("<p style='font-weight:600;'>Model types</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-weight:600;'>Model types:</p>", unsafe_allow_html=True)
             icon_map = {
                 "Statistical": "🔶", "ML/DL": "🔷", "Zero-shot": "🔴", 
                 "Fine-tuned": "🟣", "Pre-trained": "🟢"
@@ -223,7 +223,7 @@ def main():
         
         # --- Model Type Checkboxes ---
         with st.container(border=True):
-            st.markdown("<p style='font-weight:600;'>Model types</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-weight:600;'>Model types:</p>", unsafe_allow_html=True)
             icon_map = {
                 "ML/DL": "🔷", "Fine-tuned": "🟣", "Pre-trained": "🟢", "Unknown": "❔"
             }
@@ -281,7 +281,7 @@ def main():
         
         # --- Model Type Checkboxes ---
         with st.container(border=True):
-            st.markdown("<p style='font-weight:600;'>Model types</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-weight:600;'>Model types:</p>", unsafe_allow_html=True)
             icon_map = {
                 "Baseline": "⚪", "ML/DL": "🔷", "Zero-shot": "🔴", 
                 "Fine-tuned": "🟣", "Unknown": "❔"
@@ -344,3 +344,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

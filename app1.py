@@ -98,10 +98,10 @@ def main():
     st.title("Energy Bench Leaderboard")
     
     tab_Forecasting, tab_anomaly, tab_classification, tab_imputation = st.tabs([
-        "🏆 Forecasting", 
-        "🔍 Anomaly Detection", 
-        "🏷️ Classification", 
-        "🩹 Imputation"
+        "📈 Forecasting", 
+        "🚨 Anomaly Detection", 
+        "🗂️ Classification", 
+        "💊 Imputation"
         # , "ℹ️ About"
     ])
 
@@ -382,4 +382,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

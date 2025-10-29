@@ -17,8 +17,12 @@ def style_dataframe(df, metric_col, ascending=False):
     """
     # Custom formatters for float values
     format_mapping = {
-        col: '{:.4f}' for col in df.select_dtypes(include=np.number).columns
+        col: '{:.4f}' for col in df.select_dtypes(include=np.number).columns if col != 'Mask'
     }
+    # Special formatting for the 'Mask' column as it's an integer/percentage
+    if 'Mask' in df.columns and df['Mask'].dtype == np.int64:
+        format_mapping['Mask'] = '{}'
+
     styler = df.style.format(format_mapping)
     
     # Set table properties for a clean look
@@ -36,9 +40,9 @@ def column_selector(available_cols, default_cols, key_suffix):
         num_cols_for_display = min(len(available_cols), 6) # Cap at 6 columns for neatness
         # Use st.columns instead of columns() method on type_container
         cols_display = st.columns(num_cols_for_display) 
-        cols_display = cols_display
         available_cols = available_cols
-        selected_cols = ['Icon','Model']
+        # 'Icon' and 'Model' are always selected
+        selected_cols = ['Icon','Model'] 
         
         for i, col_name in enumerate(available_cols):
             
@@ -74,7 +78,6 @@ def main():
         "🚨 Anomaly Detection", 
         "🗂️ Classification", 
         "💊 Imputation"
-        # , "ℹ️ About"
     ])
 
     # --- AVAILABLE COLUMN DEFINITIONS ---
@@ -84,10 +87,11 @@ def main():
         'In-Distribution(ID)_Commercial',
         'In-Distribution(ID)_Residential'
     ]
-    FORECASTING_DEFAULT_COLS = FORECASTING_AVAILABLE_COLS # All columns displayed by default
+    # Default to all columns
+    FORECASTING_DEFAULT_COLS = FORECASTING_AVAILABLE_COLS 
     
     ANOMALY_AVAILABLE_COLS = ['F1-score', 'Precision', 'Recall']
-    ANOMALY_DEFAULT_COLS = ANOMALY_AVAILABLE_COLS  # Default to Precision and Recall only
+    ANOMALY_DEFAULT_COLS = ANOMALY_AVAILABLE_COLS 
     
     CLASSIFICATION_AVAILABLE_COLS = ['F1-score','Precision','Recall']
     CLASSIFICATION_DEFAULT_COLS = CLASSIFICATION_AVAILABLE_COLS
@@ -102,7 +106,7 @@ def main():
     with tab_Forecasting:
         st.write("We curated a large-scale energy consumption dataset consisting of 1.26 billion hourly observations collected from 76,217 real-world buildings, encompassing both commercial and residential types across diverse countries and temporal spans.")
         
-        # --- Model Type Checkboxes ---
+        # --- Model Type Checkboxes (Existing) ---
         with st.container(border=True):
             st.markdown("<p style='font-weight:600;'>Model types:</p>", unsafe_allow_html=True)
             icon_map = {
@@ -128,28 +132,88 @@ def main():
         # Filter data based on selected type checkboxes
         filtered_forecasting = RAW_FORECASTING_DATA[RAW_FORECASTING_DATA.Type.isin(selected_types_check)].copy()
         
-        # --- Column Selection ---
-        selected_cols_forecast = column_selector(
+        # --- Commercial/Residential Filter (Kept, but only for deciding which tables to show) ---
+        with st.container(border=True):
+            st.markdown("<p style='font-weight:600;'>Filter by Building Type:</p>", unsafe_allow_html=True)
+            col_comm, col_res = st.columns(2)
+            
+            show_commercial = col_comm.checkbox("Commercial", value=True, key="forecast_comm_filter")
+            show_residential = col_res.checkbox("Residential", value=True, key="forecast_res_filter")
+
+        
+        # --- Column Selection (Using all available columns for the metric selector) ---
+        selected_cols_forecast_metrics = column_selector(
             FORECASTING_AVAILABLE_COLS, 
             FORECASTING_DEFAULT_COLS, 
             "forecast"
         )
         
-        # Display Forecasting Results
-        # Use the list of selected columns
-        df_display_forecast = filtered_forecasting[selected_cols_forecast]
+        # Separate the selected metric columns into Commercial and Residential sets
+        comm_cols_to_show = [
+            col for col in selected_cols_forecast_metrics 
+            if 'Commercial' in col
+        ]
+        res_cols_to_show = [
+            col for col in selected_cols_forecast_metrics 
+            if 'Residential' in col
+        ]
         
-        # Sort logic: Lower OOD_Commercial is better (ascending=True for error metrics)
-        sort_col = 'Out-of-distribution(OOD)_Commercial'
-        if sort_col in df_display_forecast.columns:
-            df_display_forecast = df_display_forecast.sort_values(by=sort_col, ascending=True).reset_index(drop=True)
+        # The base columns for both tables
+        base_cols = ['Icon', 'Model']
         
-        st.dataframe(
-            style_dataframe(df_display_forecast, sort_col, ascending=True),
-            use_container_width=False,
-            hide_index=True
-        )
+        # ----------------------------------------------------------------------------------
+        # --- Commercial Results Table ---
+        # ----------------------------------------------------------------------------------
+        if show_commercial and comm_cols_to_show:
+            st.header("🏢 Commercial Buildings")
+            
+            # Final columns for the commercial table: Icon, Model, and selected Commercial metrics
+            selected_cols_comm = base_cols + comm_cols_to_show
+
+            # Prepare commercial dataframe
+            df_display_comm = filtered_forecasting[selected_cols_comm]
+            
+            # Sort logic: Lower Out-of-distribution(OOD)_Commercial is better (ascending=True for error metrics)
+            sort_col_comm = 'Out-of-distribution(OOD)_Commercial'
+            if sort_col_comm in df_display_comm.columns:
+                df_display_comm = df_display_comm.sort_values(by=sort_col_comm, ascending=True).reset_index(drop=True)
+            else:
+                sort_col_comm = None # Fallback if OOD Commercial isn't selected
+            
+            st.dataframe(
+                style_dataframe(df_display_comm, sort_col_comm, ascending=True if sort_col_comm else False),
+                use_container_width=True,
+                hide_index=True
+            )
+
+        # ----------------------------------------------------------------------------------
+        # --- Residential Results Table ---
+        # ----------------------------------------------------------------------------------
+        if show_residential and res_cols_to_show:
+            st.header("🏡 Residential Buildings")
+            
+            # Final columns for the residential table: Icon, Model, and selected Residential metrics
+            selected_cols_res = base_cols + res_cols_to_show
+            
+            # Prepare residential dataframe
+            df_display_res = filtered_forecasting[selected_cols_res]
+            
+            # Sort logic: Lower Out-of-distribution(OOD)_Residential is better (ascending=True for error metrics)
+            sort_col_res = 'Out-of-distribution(OOD)_Residential'
+            if sort_col_res in df_display_res.columns:
+                df_display_res = df_display_res.sort_values(by=sort_col_res, ascending=True).reset_index(drop=True)
+            else:
+                sort_col_res = None # Fallback if OOD Residential isn't selected
+
+            st.dataframe(
+                style_dataframe(df_display_res, sort_col_res, ascending=True if sort_col_res else False),
+                use_container_width=True,
+                hide_index=True
+            )
         
+        if (not show_commercial and not show_residential) or (not comm_cols_to_show and not res_cols_to_show):
+             st.warning("Please select at least one building type filter and/or at least one metric column to display results.")
+
         with st.container(border=True):
             st.markdown("<p style='font-weight:600;'></p>", unsafe_allow_html=True)
             st.write("""⚪ Baseline: A simple model used as a benchmark to evaluate the performance of more complex models\n
@@ -158,8 +222,9 @@ def main():
 🟣 Fine-tuned: Pretrained models adapted to a specific task through additional training on the target dataset.\n
 🟢 Pretrained: Models trained on large-scale datasets to capture general patterns, which can later be adapted for specific tasks.""")
 
+
     # ----------------------------------------------------------------------------------
-    # --- Anomaly Detection Tab --- 
+    # --- Anomaly Detection Tab (No Changes) --- 
     # ----------------------------------------------------------------------------------
     with tab_anomaly:
         st.write("We use the Large-scale Energy Anomaly Detection (LEAD) dataset which contains electricity meter readings from 200 buildings and anomaly labels. Since the meter readings include missing values, we applied a median imputation technique to handle them. All readings were then normalized using the Standard Scaler. Model performance was evaluated using the F1-score as the primary evaluation metric.")
@@ -187,11 +252,12 @@ def main():
         filtered_anomaly = RAW_ANOMALY_DATA[RAW_ANOMALY_DATA.Type.isin(selected_types_check)].copy()
 
         # --- Column Selection ---
-        selected_cols_anomaly = column_selector(
+        selected_cols_anomaly_metrics = column_selector(
             ANOMALY_AVAILABLE_COLS, 
             ANOMALY_DEFAULT_COLS, 
             "anomaly"
         )
+        selected_cols_anomaly = ['Icon', 'Model'] + [col for col in selected_cols_anomaly_metrics if col not in ['Icon', 'Model']]
         
         # Display Anomaly Detection Results
         df_display_anomaly = filtered_anomaly[selected_cols_anomaly]
@@ -200,23 +266,25 @@ def main():
         sort_col = 'F1-score'
         if sort_col in df_display_anomaly.columns:
             df_display_anomaly = df_display_anomaly.sort_values(by=sort_col, ascending=False).reset_index(drop=True)
+        else:
+            sort_col = None
 
         st.dataframe(
             style_dataframe(df_display_anomaly, sort_col, ascending=False),
-            use_container_width=False,
+            use_container_width=True, # Changed to True
             hide_index=True
         )
 
         with st.container(border=True):
             st.markdown("<p style='font-weight:600;'></p>", unsafe_allow_html=True)
-            st.write("""🔶 Statistical: A simple model used as a benchmark to evaluate the performance of more complex models\n
-🔷 ML/DL: These are task-specific models that are trained from scratch on the given dataset.\n
-🔴 Zero-shot: These are pretrained models that can generalize to unseen tasks or datasets without additional training, leveraging pretrained knowledge to make predictions directly.\n
-🟣 Fine-tuned: Pretrained models adapted to a specific task through additional training on the target dataset.\n
-🟢 Pretrained: Models trained on large-scale datasets to capture general patterns, which can later be adapted for specific tasks.""")
+            st.write("""⚪ **Baseline**: A simple model used as a benchmark to evaluate the performance of more complex models\n
+🔷 **ML/DL**: These are task-specific models that are trained from scratch on the given dataset.\n
+🔴 **Zero-shot**: These are pretrained models that can generalize to unseen tasks or datasets without additional training, leveraging pretrained knowledge to make predictions directly.\n
+🟣 **Fine-tuned**: Pretrained models adapted to a specific task through additional training on the target dataset.\n
+🟢 **Pretrained**: Models trained on large-scale datasets to capture general patterns, which can later be adapted for specific tasks.""")
 
     # ----------------------------------------------------------------------------------
-    # --- Classification Tab ---       
+    # --- Classification Tab ---       
     # ----------------------------------------------------------------------------------
     with tab_classification:
         st.write("The ComStock dataset provides 15-minute simulated energy data for U.S. commercial buildings. We selected 1,000 California buildings, using 60-minute appliance-level load data (cooling, fans, heat rejection, heating, refrigerator, washing machine) from 2018. Each appliance has binary labels. Data were split 70% for training and 30% for testing.")
@@ -247,11 +315,12 @@ def main():
         filtered_classification = RAW_CLASSIFICATION_DATA[RAW_CLASSIFICATION_DATA.Type.isin(selected_types_check)].copy()
 
         # --- Column Selection ---
-        selected_cols_class = column_selector(
+        selected_cols_class_metrics = column_selector(
             CLASSIFICATION_AVAILABLE_COLS, 
             CLASSIFICATION_DEFAULT_COLS, 
             "classification"
         )
+        selected_cols_class = ['Icon', 'Model'] + [col for col in selected_cols_class_metrics if col not in ['Icon', 'Model']]
         
         # Display Classification Results
         df_display_class = filtered_classification[selected_cols_class].reset_index(drop=True)
@@ -260,6 +329,8 @@ def main():
         sort_col = 'F1-score'
         if sort_col in df_display_class.columns:
             df_display_class = df_display_class.sort_values(by=sort_col, ascending=False).reset_index(drop=True)
+        else:
+            sort_col = None
 
         st.dataframe(
             style_dataframe(df_display_class, sort_col, ascending=False),
@@ -269,9 +340,9 @@ def main():
 
         with st.container(border=True):
             st.markdown("<p style='font-weight:600;'></p>", unsafe_allow_html=True)
-            st.write("""🔷 ML/DL: These are task-specific models that are trained from scratch on the given dataset.\n
-🟣 Fine-tuned: Pretrained models adapted to a specific task through additional training on the target dataset.\n
-🟢 Pretrained: Models trained on large-scale datasets to capture general patterns, which can later be adapted for specific tasks.""")
+            st.write("""🔷 **ML/DL**: These are task-specific models that are trained from scratch on the given dataset.\n
+🟣 **Fine-tuned**: Pretrained models adapted to a specific task through additional training on the target dataset.\n
+🟢 **Pretrained**: Models trained on large-scale datasets to capture general patterns, which can later be adapted for specific tasks.""")
 
     # ----------------------------------------------------------------------------------
     # --- Imputation Tab --- 
@@ -279,7 +350,7 @@ def main():
     with tab_imputation:
         st.write("We used meter data from 78 commercial buildings, which form a subset of the BDG2 dataset. Initially, all missing values were replaced with zeros. A Min–Max scaler was applied to each meter reading to normalize the values within the range [0, 1]. The dataset was divided into training (7 months), validation (2 months), and testing (3 months) sets. To evaluate the model’s robustness against incomplete data, masking was applied to simulate missing values at 5%, 10%, 15%, and 20% levels. Model performance was assessed using two key metrics: Mean Absolute Error (MAE) and Mean Squared Error (MSE).")
         
-        # --- Model Type Checkboxes ---
+        # --- Model Type Checkboxes (Existing) ---
         with st.container(border=True):
             st.markdown("<p style='font-weight:600;'>Model types:</p>", unsafe_allow_html=True)
             icon_map = {
@@ -303,14 +374,40 @@ def main():
                     selected_types_check.append(model_type_str)
 
         # Filter data based on selected type checkboxes
-        filtered_imputation = RAW_IMPUTATION_DATA[RAW_IMPUTATION_DATA.Type.isin(selected_types_check)].copy()
+        filtered_imputation_by_type = RAW_IMPUTATION_DATA[RAW_IMPUTATION_DATA.Type.isin(selected_types_check)].copy()
 
-        # --- Column Selection ---
-        selected_cols_imput = column_selector(
+        # --- Mask Percentage Checkbox Filter ---
+        # st.markdown("---")
+        with st.container(border=True):
+            st.markdown("<p style='font-weight:600;'>Filter by Mask Percentage:</p>", unsafe_allow_html=True)
+            
+            # Use unique mask values from the data and sort them
+            unique_masks = sorted(filtered_imputation_by_type.Mask.unique().tolist())
+            cols_masks = st.columns(len(unique_masks))
+            selected_masks = []
+            
+            for i, mask_val in enumerate(unique_masks):
+                # Use value=True to have all masks selected by default
+                if cols_masks[i].checkbox(f"{mask_val}%", value=True, key=f"imputation_mask_checkbox_{mask_val}"):
+                    selected_masks.append(mask_val)
+
+
+        # Filter data based on selected mask percentages
+        if selected_masks:
+            filtered_imputation = filtered_imputation_by_type[filtered_imputation_by_type.Mask.isin(selected_masks)].copy()
+        else:
+            # If no mask is selected, display a warning state
+            st.warning("Please select at least one Mask Percentage to display results.")
+            st.stop()
+
+
+        # --- Column Selection (Existing) ---
+        selected_cols_imput_metrics = column_selector(
             IMPUTATION_AVAILABLE_COLS, 
             IMPUTATION_DEFAULT_COLS, 
             "imputation"
         )
+        selected_cols_imput = ['Icon', 'Model'] + [col for col in selected_cols_imput_metrics if col not in ['Icon', 'Model']]
         
         # Display Imputation Results
         df_display_imput = filtered_imputation[selected_cols_imput].reset_index(drop=True)
@@ -319,6 +416,8 @@ def main():
         sort_col = 'MSE'
         if sort_col in df_display_imput.columns:
             df_display_imput = df_display_imput.sort_values(by=sort_col, ascending=True).reset_index(drop=True)
+        else:
+            sort_col = None
 
         st.dataframe(
             style_dataframe(df_display_imput, sort_col, ascending=True),
@@ -328,11 +427,15 @@ def main():
         
         with st.container(border=True):
             st.markdown("<p style='font-weight:600;'></p>", unsafe_allow_html=True)
-            st.write("""⚪ Baseline: A simple model used as a benchmark to evaluate the performance of more complex models\n
-🔷 ML/DL: These are task-specific models that are trained from scratch on the given dataset.\n
-🔴 Zero-shot: These are pretrained models that can generalize to unseen tasks or datasets without additional training, leveraging pretrained knowledge to make predictions directly.\n
-🟣 Fine-tuned: Pretrained models adapted to a specific task through additional training on the target dataset.""")
+            st.write("""⚪ **Baseline**: A simple model used as a benchmark to evaluate the performance of more complex models\n
+🔷 **ML/DL**: These are task-specific models that are trained from scratch on the given dataset.\n
+🔴 **Zero-shot**: These are pretrained models that can generalize to unseen tasks or datasets without additional training, leveraging pretrained knowledge to make predictions directly.\n
+🟣 **Fine-tuned**: Pretrained models adapted to a specific task through additional training on the target dataset.""")
+            
 
+    # ----------------------------------------------------------------------------------
+    # --- About Tab --- 
+    # ----------------------------------------------------------------------------------
 #     with tab_about:
 #         with st.container(border=True):
 #             st.markdown("<p style='font-weight:600;'></p>", unsafe_allow_html=True)
@@ -344,4 +447,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -108,8 +108,7 @@ def main():
             st.markdown("### Load Forecasting")
             st.write(f"""
             This task evaluates models on predicting future energy consumption. 
-            We utilize a **massive dataset** of **1.26 billion** hourly observations from **76,217 buildings** (commercial and residential). 
-            The specialized model for this benchmark is **Energy-TTMs**.
+            We utilize a **Energybench Dataset** of **1.26 billion** hourly observations from **76,217 buildings** (commercial and residential).
 
             **Evaluation Metric**: **Normalized Root Mean Square Error (NRMSE)**. **Lower** values indicate better performance.
             """)
@@ -239,7 +238,7 @@ def main():
             st.markdown("### Energy Anomaly Detection")
             st.write("""
             This benchmark uses the **Large-scale Energy Anomaly Detection (LEAD) dataset** from 200 buildings with anomaly labels. 
-            Data preparation included median imputation for missing values and Standard Scaling. The dedicated model is **Energy-TSPulse**.
+            Data preparation included median imputation for missing values and Standard Scaling.
 
             **Evaluation Metrics**: **F1-score**, **Precision**, and **Recall**. **Higher** values indicate better performance.
             """)
@@ -306,7 +305,7 @@ def main():
             st.markdown("### Appliance Classification")
             st.write("""
             This task focuses on **appliance ownership prediction** (a binary classification) using 15-minute simulated energy data from **1,000 California commercial buildings** (ComStock dataset). 
-            We use appliance-level load data (e.g., cooling, heating). The model for this task is **Energy-TSPulse**.
+            We use appliance-level load data (e.g., cooling, fans, heat rejection, heating, refrigerator, washing machine).
 
             **Evaluation Metrics**: **F1-score**, **Precision**, and **Recall**. **Higher** values indicate better performance.
             """)
@@ -373,8 +372,8 @@ def main():
         with st.container(border=True):
             st.markdown("### Missing Data Imputation")
             st.write("""
-            This task evaluates the ability to accurately fill in missing values in energy meter data from **78 commercial buildings**. 
-            Missing data (masking) is simulated at various percentage levels (5% to 20%). The dedicated model is **Energy-TSPulse**.
+            This task evaluates the ability to accurately fill in missing values in energy meter data from **78 commercial buildings** from BDG-2 Dataset. 
+            Missing data (masking) is simulated at various percentage levels (5% to 20%).
 
             **Evaluation Metrics**: **Mean Absolute Error (MAE)** and **Mean Squared Error (MSE)**. **Lower** values indicate better performance.
             """)

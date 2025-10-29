@@ -482,7 +482,7 @@ def main():
 
             st.markdown("### 🌍 Pre-training Data Scale")
             st.write("""
-    The models were pre-trained on a massive, real-world dataset:
+    The models were pre-trained on Energybench dataset:
     * **Total Observations**: **1.26 billion** hourly meter readings.
     * **Building Coverage**: **76,217** real-world buildings.
     * **Scope**: Encompassing both **commercial and residential** types across diverse countries and temporal spans.

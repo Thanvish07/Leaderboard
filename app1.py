@@ -182,7 +182,7 @@ def main():
             
             st.dataframe(
                 style_dataframe(df_display_comm, sort_col_comm, ascending=True if sort_col_comm else False),
-                use_container_width=True,
+                use_container_width=False,
                 hide_index=True
             )
 
@@ -207,7 +207,7 @@ def main():
 
             st.dataframe(
                 style_dataframe(df_display_res, sort_col_res, ascending=True if sort_col_res else False),
-                use_container_width=True,
+                use_container_width=False,
                 hide_index=True
             )
         
@@ -224,7 +224,7 @@ def main():
 
 
     # ----------------------------------------------------------------------------------
-    # --- Anomaly Detection Tab (No Changes) --- 
+    # --- Anomaly Detection Tab  --- 
     # ----------------------------------------------------------------------------------
     with tab_anomaly:
         st.write("We use the Large-scale Energy Anomaly Detection (LEAD) dataset which contains electricity meter readings from 200 buildings and anomaly labels. Since the meter readings include missing values, we applied a median imputation technique to handle them. All readings were then normalized using the Standard Scaler. Model performance was evaluated using the F1-score as the primary evaluation metric.")
@@ -271,7 +271,7 @@ def main():
 
         st.dataframe(
             style_dataframe(df_display_anomaly, sort_col, ascending=False),
-            use_container_width=True, # Changed to True
+            use_container_width=False, 
             hide_index=True
         )
 
@@ -447,3 +447,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

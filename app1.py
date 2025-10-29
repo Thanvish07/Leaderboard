@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import io
 import numpy as np
 
 # --- Raw Data Storage ---
@@ -73,11 +72,12 @@ def main():
     )
     st.title("Energy Bench Leaderboard")
     
-    tab_Forecasting, tab_anomaly, tab_classification, tab_imputation = st.tabs([
+    tab_Forecasting, tab_anomaly, tab_classification, tab_imputation, tab_about = st.tabs([
         "📈 Forecasting", 
         "🚨 Anomaly Detection", 
         "🗂️ Classification", 
-        "💊 Imputation"
+        "💊 Imputation",
+        "ℹ️ About"
     ])
 
     # --- AVAILABLE COLUMN DEFINITIONS ---
@@ -104,7 +104,7 @@ def main():
     # --- Forecasting Tab --- 
     # ----------------------------------------------------------------------------------
     with tab_Forecasting:
-        st.write("We curated a large-scale energy consumption dataset consisting of 1.26 billion hourly observations collected from 76,217 real-world buildings, encompassing both commercial and residential types across diverse countries and temporal spans.")
+        st.write("We curated a large-scale energy consumption dataset consisting of 1.26 billion hourly observations collected from 76,217 real-world buildings, encompassing both commercial and residential types across diverse countries and temporal spans. The Energy-TTMs model is specialized for this task. The metric used for evaluation is the Normalized Root Mean Square Error (NRMSE), where lower values indicate better performance.")
         
         # --- Model Type Checkboxes (Existing) ---
         with st.container(border=True):
@@ -134,7 +134,7 @@ def main():
         
         # --- Commercial/Residential Filter (Kept, but only for deciding which tables to show) ---
         with st.container(border=True):
-            st.markdown("<p style='font-weight:600;'>Filter by Building Type:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-weight:600;'>Building Type:</p>", unsafe_allow_html=True)
             col_comm, col_res = st.columns(2)
             
             show_commercial = col_comm.checkbox("Commercial", value=True, key="forecast_comm_filter")
@@ -227,7 +227,7 @@ def main():
     # --- Anomaly Detection Tab  --- 
     # ----------------------------------------------------------------------------------
     with tab_anomaly:
-        st.write("We use the Large-scale Energy Anomaly Detection (LEAD) dataset which contains electricity meter readings from 200 buildings and anomaly labels. Since the meter readings include missing values, we applied a median imputation technique to handle them. All readings were then normalized using the Standard Scaler. Model performance was evaluated using the F1-score as the primary evaluation metric.")
+        st.write("We use the Large-scale Energy Anomaly Detection (LEAD) dataset which contains electricity meter readings from 200 buildings and anomaly labels. Missing values were handled using median imputation and readings were normalized using the Standard Scaler. Energy-TSPulse is the dedicated pre-trained model for this task. The evaluation metrics include F1-score, Precision, and Recall, where higher values indicate better performance.")
         
         # --- Model Type Checkboxes ---
         with st.container(border=True):
@@ -287,7 +287,7 @@ def main():
     # --- Classification Tab ---       
     # ----------------------------------------------------------------------------------
     with tab_classification:
-        st.write("The ComStock dataset provides 15-minute simulated energy data for U.S. commercial buildings. We selected 1,000 California buildings, using 60-minute appliance-level load data (cooling, fans, heat rejection, heating, refrigerator, washing machine) from 2018. Each appliance has binary labels. Data were split 70% for training and 30% for testing.")
+        st.write("The ComStock dataset provides 15-minute simulated energy data for U.S. commercial buildings. We selected 1,000 California buildings, using 60-minute appliance-level load data (cooling, fans, heat rejection, heating, refrigerator, washing machine) from 2018. The task is appliance ownership prediction, modeled as binary classification. Data were split 70% for training and 30% for testing. The evaluation metrics include F1-score, Precision, and Recall, where higher values indicate better performance.")
         
         # --- Model Type Checkboxes ---
         with st.container(border=True):
@@ -348,7 +348,7 @@ def main():
     # --- Imputation Tab --- 
     # ----------------------------------------------------------------------------------
     with tab_imputation:
-        st.write("We used meter data from 78 commercial buildings, which form a subset of the BDG2 dataset. Initially, all missing values were replaced with zeros. A Min–Max scaler was applied to each meter reading to normalize the values within the range [0, 1]. The dataset was divided into training (7 months), validation (2 months), and testing (3 months) sets. To evaluate the model’s robustness against incomplete data, masking was applied to simulate missing values at 5%, 10%, 15%, and 20% levels. Model performance was assessed using two key metrics: Mean Absolute Error (MAE) and Mean Squared Error (MSE).")
+        st.write("We used meter data from 78 commercial buildings, which form a subset of the BDG2 dataset. Missing values were replaced with zeros and normalized using a Min–Max scaler. Masking was applied at 5%, 10%, 15%, and 20% levels to simulate missing data. Energy-TSPulse supports this task. The evaluation metrics are Mean Absolute Error (MAE) and Mean Squared Error (MSE), where lower values indicate better performance.")
         
         # --- Model Type Checkboxes (Existing) ---
         with st.container(border=True):
@@ -379,7 +379,7 @@ def main():
         # --- Mask Percentage Checkbox Filter ---
         # st.markdown("---")
         with st.container(border=True):
-            st.markdown("<p style='font-weight:600;'>Filter by Mask Percentage:</p>", unsafe_allow_html=True)
+            st.markdown("<p style='font-weight:600;'>Mask Percentage:</p>", unsafe_allow_html=True)
             
             # Use unique mask values from the data and sort them
             unique_masks = sorted(filtered_imputation_by_type.Mask.unique().tolist())
@@ -436,15 +436,38 @@ def main():
     # ----------------------------------------------------------------------------------
     # --- About Tab --- 
     # ----------------------------------------------------------------------------------
-#     with tab_about:
-#         with st.container(border=True):
-#             st.markdown("<p style='font-weight:600;'></p>", unsafe_allow_html=True)
-#             st.write("""⚪ Baseline: A simple model used as a benchmark to evaluate the performance of more complex models\n
-# 🔷 ML/DL: These are task-specific models that are trained from scratch on the given dataset.\n
-# 🔴 Zero-shot: It is a pretrained models that can generalize to unseen tasks or datasets without additional training, leveraging pretrained knowledge to make predictions directly.\n
-# 🟣 Fine-tuned: Pretrained models adapted to a specific task through additional training on the target dataset.\n
-# 🟢 Pretrained: We curated a large-scale energy consumption dataset consisting of 1.26 billion hourly observations collected from 76,217 real-world buildings, encompassing both commercial and residential types across diverse countries and temporal spans.""")
+    with tab_about:
+        with st.container(border=True):
+            st.markdown("## ⚡️ Energy Bench Leaderboard: Project Overview", unsafe_allow_html=True)
+            st.write("""
+    **EnergyFM** is a family of **pre-trained models** specifically designed for **energy meter data analytics**. It supports a range of downstream tasks, demonstrating the potential of specialized Foundation Models in the energy sector.
+    """)
+            st.markdown("---")
+            
+            st.markdown("### 🧠 Core Foundation Models")
+            st.write("""
+    EnergyFM is built upon IBM's lightweight Time Series Foundation Model (TSFM) architectures, the **Tiny Time Mixers (TTMs)** and **TSPulse**, which use efficient **MLP-Mixer** designs.
+
+    * **Energy-TTMs**: Optimized for **Short-Term Load Forecasting**.
+    * **Energy-TSPulse**: A versatile model supporting **Anomaly Detection, Classification, and Imputation**.
+    """)
+            st.markdown("---")
+
+            st.markdown("### 🌍 Pre-training Data Scale")
+            st.write("""
+    The models were pre-trained on a massive, real-world dataset:
+    * **Total Observations**: **1.26 billion** hourly meter readings.
+    * **Building Coverage**: **76,217** real-world buildings.
+    * **Scope**: Encompassing both **commercial and residential** types across diverse countries and temporal spans.
+    """)
+            st.markdown("---")
+
+            st.markdown("### 🏆 Evaluation Methodology")
+            st.write("""
+    Performance is benchmarked against traditional models and state-of-the-art TSFMs in two primary settings:
+    * **Zero-shot**: Evaluating generalization capability *without* additional training on the target data.
+    * **Fine-tuned**: Evaluating performance after adapting the pre-trained model with additional training (transfer learning).
+    """)
 
 if __name__ == "__main__":
     main()
-

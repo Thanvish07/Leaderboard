@@ -104,9 +104,17 @@ def main():
     # --- Forecasting Tab --- 
     # ----------------------------------------------------------------------------------
     with tab_Forecasting:
-        st.write("We curated a large-scale energy consumption dataset consisting of 1.26 billion hourly observations collected from 76,217 real-world buildings, encompassing both commercial and residential types across diverse countries and temporal spans. The Energy-TTMs model is specialized for this task. The metric used for evaluation is the Normalized Root Mean Square Error (NRMSE), where lower values indicate better performance.")
-        
-        # --- Model Type Checkboxes (Existing) ---
+        with st.container(border=True):
+            st.markdown("### Load Forecasting")
+            st.write(f"""
+            This task evaluates models on predicting future energy consumption. 
+            We utilize a **massive dataset** of **1.26 billion** hourly observations from **76,217 buildings** (commercial and residential). 
+            The specialized model for this benchmark is **Energy-TTMs**.
+
+            **Evaluation Metric**: **Normalized Root Mean Square Error (NRMSE)**. **Lower** values indicate better performance.
+            """)
+
+        # --- Model Type Checkboxes ---
         with st.container(border=True):
             st.markdown("<p style='font-weight:600;'>Model types:</p>", unsafe_allow_html=True)
             icon_map = {
@@ -227,8 +235,15 @@ def main():
     # --- Anomaly Detection Tab  --- 
     # ----------------------------------------------------------------------------------
     with tab_anomaly:
-        st.write("We use the Large-scale Energy Anomaly Detection (LEAD) dataset which contains electricity meter readings from 200 buildings and anomaly labels. Missing values were handled using median imputation and readings were normalized using the Standard Scaler. Energy-TSPulse is the dedicated pre-trained model for this task. The evaluation metrics include F1-score, Precision, and Recall, where higher values indicate better performance.")
-        
+        with st.container(border=True):
+            st.markdown("### Energy Anomaly Detection")
+            st.write("""
+            This benchmark uses the **Large-scale Energy Anomaly Detection (LEAD) dataset** from 200 buildings with anomaly labels. 
+            Data preparation included median imputation for missing values and Standard Scaling. The dedicated model is **Energy-TSPulse**.
+
+            **Evaluation Metrics**: **F1-score**, **Precision**, and **Recall**. **Higher** values indicate better performance.
+            """)
+
         # --- Model Type Checkboxes ---
         with st.container(border=True):
             st.markdown("<p style='font-weight:600;'>Model types:</p>", unsafe_allow_html=True)
@@ -287,8 +302,15 @@ def main():
     # --- Classification Tab ---       
     # ----------------------------------------------------------------------------------
     with tab_classification:
-        st.write("The ComStock dataset provides 15-minute simulated energy data for U.S. commercial buildings. We selected 1,000 California buildings, using 60-minute appliance-level load data (cooling, fans, heat rejection, heating, refrigerator, washing machine) from 2018. The task is appliance ownership prediction, modeled as binary classification. Data were split 70% for training and 30% for testing. The evaluation metrics include F1-score, Precision, and Recall, where higher values indicate better performance.")
-        
+        with st.container(border=True):
+            st.markdown("### Appliance Classification")
+            st.write("""
+            This task focuses on **appliance ownership prediction** (a binary classification) using 15-minute simulated energy data from **1,000 California commercial buildings** (ComStock dataset). 
+            We use appliance-level load data (e.g., cooling, heating). The model for this task is **Energy-TSPulse**.
+
+            **Evaluation Metrics**: **F1-score**, **Precision**, and **Recall**. **Higher** values indicate better performance.
+            """)
+
         # --- Model Type Checkboxes ---
         with st.container(border=True):
             st.markdown("<p style='font-weight:600;'>Model types:</p>", unsafe_allow_html=True)
@@ -348,8 +370,14 @@ def main():
     # --- Imputation Tab --- 
     # ----------------------------------------------------------------------------------
     with tab_imputation:
-        st.write("We used meter data from 78 commercial buildings, which form a subset of the BDG2 dataset. Missing values were replaced with zeros and normalized using a Min–Max scaler. Masking was applied at 5%, 10%, 15%, and 20% levels to simulate missing data. Energy-TSPulse supports this task. The evaluation metrics are Mean Absolute Error (MAE) and Mean Squared Error (MSE), where lower values indicate better performance.")
-        
+        with st.container(border=True):
+            st.markdown("### Missing Data Imputation")
+            st.write("""
+            This task evaluates the ability to accurately fill in missing values in energy meter data from **78 commercial buildings**. 
+            Missing data (masking) is simulated at various percentage levels (5% to 20%). The dedicated model is **Energy-TSPulse**.
+
+            **Evaluation Metrics**: **Mean Absolute Error (MAE)** and **Mean Squared Error (MSE)**. **Lower** values indicate better performance.
+            """)
         # --- Model Type Checkboxes (Existing) ---
         with st.container(border=True):
             st.markdown("<p style='font-weight:600;'>Model types:</p>", unsafe_allow_html=True)

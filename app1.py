@@ -190,8 +190,7 @@ def main():
             st.dataframe(
                 style_dataframe(df_display_comm, sort_col_comm, ascending=True if sort_col_comm else False),
                 use_container_width=False,
-                hide_index=True,
-                disable_copy_key=True
+                hide_index=True
             )
 
         # ----------------------------------------------------------------------------------
@@ -216,8 +215,7 @@ def main():
             st.dataframe(
                 style_dataframe(df_display_res, sort_col_res, ascending=True if sort_col_res else False),
                 use_container_width=False,
-                hide_index=True,
-                disable_copy_key=True
+                hide_index=True
             )
         
         if (not show_commercial and not show_residential) or (not comm_cols_to_show and not res_cols_to_show):
@@ -288,8 +286,7 @@ def main():
         st.dataframe(
             style_dataframe(df_display_anomaly, sort_col, ascending=False),
             use_container_width=False, 
-            hide_index=True,
-            disable_copy_key=True
+            hide_index=True
         )
 
         with st.container(border=True):
@@ -359,8 +356,7 @@ def main():
         st.dataframe(
             style_dataframe(df_display_class, sort_col, ascending=False),
             use_container_width=False,
-            hide_index=True,
-            disable_copy_key=True
+            hide_index=True
         )
 
         with st.container(border=True):
@@ -453,8 +449,7 @@ def main():
         st.dataframe(
             style_dataframe(df_display_imput, sort_col, ascending=True),
             use_container_width=False,
-            hide_index=True,
-            disable_copy_key=True
+            hide_index=True
         )
         
         with st.container(border=True):
@@ -503,5 +498,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 

@@ -16,7 +16,8 @@ Fine-tuned,Lag-Llama,29.54,68.89,30.92,66.63
 Fine-tuned,MOMENT,38.29,71.78,42.95,73.2
 Pre-trained,Energy-TTMs,22.9,60.61,32.1,64.82
 Zero-shot,Moirai2p0,19.63,69.21,32.9,66.28
-Zero-shot,TimesFM_2p5,21.46,74.21,,
+Zero-shot,TimesFM_2p5,21.46,74.21,33.04,68.86
 Zero-shot,TireX,22.43,83.03,33.83,97.92
 Zero-shot,Kairos_50m,66.45,100.97,47.17,133.47
 Zero-shot,Kairos_23m,69.89,262.86,88.18,216.09
+

@@ -189,7 +189,7 @@ def main():
             
             st.dataframe(
                 style_dataframe(df_display_comm, sort_col_comm, ascending=True if sort_col_comm else False),
-                use_container_width=False,
+                use_container_width=True,
                 hide_index=True
             )
 
@@ -214,7 +214,7 @@ def main():
 
             st.dataframe(
                 style_dataframe(df_display_res, sort_col_res, ascending=True if sort_col_res else False),
-                use_container_width=False,
+                use_container_width=True,
                 hide_index=True
             )
         
@@ -285,7 +285,7 @@ def main():
 
         st.dataframe(
             style_dataframe(df_display_anomaly, sort_col, ascending=False),
-            use_container_width=False, 
+            use_container_width=True, 
             hide_index=True
         )
 
@@ -355,7 +355,7 @@ def main():
 
         st.dataframe(
             style_dataframe(df_display_class, sort_col, ascending=False),
-            use_container_width=False,
+            use_container_width=True,
             hide_index=True
         )
 
@@ -448,7 +448,7 @@ def main():
 
         st.dataframe(
             style_dataframe(df_display_imput, sort_col, ascending=True),
-            use_container_width=False,
+            use_container_width=True,
             hide_index=True
         )
         
@@ -498,3 +498,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

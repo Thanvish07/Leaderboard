@@ -291,7 +291,7 @@ def main():
 
         with st.container(border=True):
             st.markdown("<p style='font-weight:600;'></p>", unsafe_allow_html=True)
-            st.write("""🔶 **Statistical**: A simple model used as a benchmark to evaluate the performance of more complex models\n
+            st.write("""🔶 **Statistical**: Models that rely on formal mathematical and probabilistic frameworks for prediction or anomaly detection\n
 🔷 **ML/DL**: These are task-specific models that are trained from scratch on the given dataset.\n
 🔴 **Zero-shot**: These are pretrained models that can generalize to unseen tasks or datasets without additional training, leveraging pretrained knowledge to make predictions directly.\n
 🟣 **Fine-tuned**: Pretrained models adapted to a specific task through additional training on the target dataset.\n
@@ -498,6 +498,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
